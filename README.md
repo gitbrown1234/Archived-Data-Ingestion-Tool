@@ -7,12 +7,14 @@ This solution provides a streamlined, dashboard-driven approach to selectively i
 
 ## Overview
 
-Your archived data resides on an NFS share. This solution allows you to:
+This solution is designed to manage and selectively re-ingest data that has been archived to an NFS share, particularly useful for **low-value logs that are typically not ingested into Splunk but should not be deleted**. Often, such data is written to NFS via "ingest actions" or other archiving mechanisms. When a specific need arises to examine a subset of this archived data (e.g., for a compliance audit, incident investigation, or rare troubleshooting), manually re-ingesting it can be cumbersome.
+
+This tool simplifies that process by allowing you to:
 
 *   **Discover Files:** The `scrape_files` app on a Universal Forwarder (UF) uses `find_deepest_dirs.sh` to regularly scan the NFS share and index available file paths.
 *   **Select & Configure:** From the `TA-archived-data-ingestor` dashboard (accessed on the Deployment Server), you select specific archived files and define their target `sourcetype` and `index`.
 *   **Dynamic `inputs.conf` Generation:** A custom command, running on the Deployment Server, writes `monitor` stanzas for your selections directly into the `scrape_files` app's `local/inputs.conf` *on that same Deployment Server*.
-*   **Deployment & Ingestion:** The DS then pushes the updated `scrape_files` app to the UF. After a configuration reload, the UF begins monitoring and ingesting only the selected files.
+*   **Deployment & Ingestion:** The DS pushes the updated `scrape_files` app to the UF. After a configuration reload, the UF begins monitoring and ingesting only the selected files.
 
 ## How It Works (Workflow)
 
