@@ -1,0 +1,79 @@
+<form version="1.1" theme="dark">
+  <label>Archived-Data Ingestion Tool</label>
+  <fieldset submitButton="true">
+    <input type="text" token="Year">
+      <label>Year (for finding files)</label>
+      <default>2025</default>
+    </input>
+    <input type="text" token="Day">
+      <label>Day (for finding files)</label>
+      <default>05</default>
+    </input>
+    <input type="text" token="SourcetypeSearch">
+      <label>Sourcetype (for finding files)</label>
+      <default>Nothing</default>
+    </input>
+
+    <input type="text" token="ArchiveAppName">
+      <label>Target App Name for inputs.conf</label>
+      <default>Archive-Inputs</default>
+      <initialValue>Archive-Inputs</initialValue>
+      <help>The app where the generated inputs.conf will be placed (e.g., 'Archive-Inputs'). This app must exist.</help>
+    </input>
+
+    <input type="text" token="ingestSourcetype">
+      <label>Sourcetype for Ingested Data</label>
+      <default>archived_data_ingest</default>
+      <initialValue>archived_data_ingest</initialValue>
+      <help>The sourcetype to assign to the files when Splunk ingests them.</help>
+    </input>
+
+    <input type="text" token="ingestIndex">
+      <label>Index for Ingested Data</label>
+      <default>archive</default>
+      <initialValue>archive</initialValue>
+      <help>The Splunk index where the ingested data will be stored.</help>
+    </input>
+
+    <input type="checkbox" token="field1">
+      <label>Select Files to Bring Back (Full Paths)</label>
+      <fieldForLabel>_raw</fieldForLabel>
+      <fieldForValue>_raw</fieldForValue>
+      <search>
+        <!-- This search should return full file paths in the _raw field -->
+        <query>index=main sourcetype=deepest_dirs $SourcetypeSearch$ $Year$ $Day$ | dedup _raw</query>
+        <earliest>-24h@h</earliest>
+        <latest>now</latest>
+      </search>
+      <delimiter> </delimiter>
+      <choice value="Nothing">Nothing</choice>
+      <default>Nothing</default>
+    </input>
+  </fieldset>
+  <row>
+    <panel depends="$field1$ != &quot;Nothing&quot;">
+      <html>
+        <h2>Ingestion Command Output</h2>
+        <p>This panel shows the result of generating the inputs.conf file.</p>
+        <p><strong>IMPORTANT:</strong> After the command runs successfully, you MUST restart Splunk or reload the app containing the generated inputs.conf (e.g., via Splunk Web > Apps > Manage Apps > Reload) for the new inputs to take effect.</p>
+      </html>
+      <table>
+        <search>
+          <!-- Pass all new options to your custom command -->
+          <query>
+            | bringbackdata field1="$field1$"
+            ingest_sourcetype="$ingestSourcetype$"
+            ingest_index="$ingestIndex$"
+            inputs_conf_path="/opt/splunk/etc/apps/$ArchiveAppName$/local/inputs.conf"
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+          <sampleRatio>1</sampleRatio>
+        </search>
+        <option name="drilldown">none</option>
+        <option name="refresh.display">progressbar</option>
+        <option name="wrap">true</option>
+      </table>
+    </panel>
+  </row>
+</form>
